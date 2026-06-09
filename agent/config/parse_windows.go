@@ -208,10 +208,3 @@ func parseInstanceIPCompatibility() ipcompatibility.IPCompatibility {
 	}
 	return ipcompatibility.IPCompatibility{}
 }
-
-func parsePropagateTaskMemoryLimitCgroupV2() BooleanDefaultFalse {
-	if os.Getenv(envPropagateTaskMemoryLimitCgroupV2) != "" {
-		seelog.Warn(envPropagateTaskMemoryLimitCgroupV2 + " is not supported on Windows")
-	}
-	return BooleanDefaultFalse{Value: ExplicitlyDisabled}
-}

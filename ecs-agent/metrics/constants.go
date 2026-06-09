@@ -49,11 +49,6 @@ const (
 	CredentialsRefreshFailure = credsRefreshNamespace + ".Failure"
 	CredentialsRefreshSuccess = credsRefreshNamespace + ".Success"
 
-	// ECS Control Plane Connectivity
-	DPEConnectivityFailureMetricName = "DPEConnectivityFailure"
-	ACSConnectivityFailureMetricName = "ACSConnectivityFailure"
-	TCSConnectivityFailureMetricName = "TCSConnectivityFailure"
-
 	// Agent Availability
 	agentAvailabilityNamespace     = "Availability"
 	ACSDisconnectTimeoutMetricName = agentAvailabilityNamespace + ".ACSDisconnectTimeout"

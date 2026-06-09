@@ -318,7 +318,7 @@ func TestRefresh(t *testing.T) {
 					Times(0)
 			}
 
-			refresher := &IMDSCredentialsRefresher{
+			refresher := &IMDSCredentialRefresher{
 				ctx:         context.Background(),
 				scanner:     mockScanner,
 				credManager: mockCredManager,
@@ -426,7 +426,7 @@ func TestUpsertCredential(t *testing.T) {
 					Times(0)
 			}
 
-			refresher := &IMDSCredentialsRefresher{
+			refresher := &IMDSCredentialRefresher{
 				ctx:         context.Background(),
 				credManager: mockCredManager,
 			}

@@ -33,7 +33,3 @@ func TestParseFSxWindowsFileServerCapability(t *testing.T) {
 func TestParseTaskPidsLimit(t *testing.T) {
 	assert.Zero(t, parseTaskPidsLimit())
 }
-
-func TestParsePropagateTaskMemoryLimitCgroupV2(t *testing.T) {
-	assert.False(t, parsePropagateTaskMemoryLimitCgroupV2().Enabled())
-}

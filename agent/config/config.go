@@ -606,7 +606,6 @@ func environmentConfig() (Config, error) {
 		TaskPidsLimit:                       parseTaskPidsLimit(),
 		FirelensAsyncEnabled:                parseBooleanDefaultTrueConfig("ECS_ENABLE_FIRELENS_ASYNC"),
 		InstanceIPCompatibility:             parseInstanceIPCompatibility(),
-		PropagateTaskMemoryLimitCgroupV2:    parsePropagateTaskMemoryLimitCgroupV2(),
 	}, err
 }
 

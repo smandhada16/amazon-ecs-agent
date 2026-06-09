@@ -76,23 +76,6 @@ type telemetrySession struct {
 	doctor                        *doctor.Doctor
 	ecsClient                     TcsEcsClient
 	lastDisconnectedTime          time.Time
-	dpeFailureTracker             *metrics.FailureTracker
-	tcsConnFailureTracker         *metrics.FailureTracker
-}
-
-// TelemetrySessionOption configures optional behavior on the TCS session.
-type TelemetrySessionOption func(*telemetrySession)
-
-// WithDPEFailureTracker sets the FailureTracker used to track
-// DiscoverPollEndpoint failures across retry attempts.
-func WithDPEFailureTracker(dpeFailureTracker *metrics.FailureTracker) TelemetrySessionOption {
-	return func(session *telemetrySession) { session.dpeFailureTracker = dpeFailureTracker }
-}
-
-// WithTCSConnFailureTracker sets the FailureTracker used to track TCS
-// connection failures across retry attempts.
-func WithTCSConnFailureTracker(tcsConnFailureTracker *metrics.FailureTracker) TelemetrySessionOption {
-	return func(session *telemetrySession) { session.tcsConnFailureTracker = tcsConnFailureTracker }
 }
 
 func NewTelemetrySession(
@@ -115,9 +98,8 @@ func NewTelemetrySession(
 	instanceStatusChannel <-chan ecstcs.InstanceStatusMessage,
 	doctor *doctor.Doctor,
 	ecsClient TcsEcsClient,
-	opts ...TelemetrySessionOption,
 ) TelemetrySession {
-	session := &telemetrySession{
+	return &telemetrySession{
 		containerInstanceArn:          containerInstanceArn,
 		cluster:                       cluster,
 		agentVersion:                  agentVersion,
@@ -139,10 +121,6 @@ func NewTelemetrySession(
 		ecsClient:                     ecsClient,
 		lastDisconnectedTime:          time.Time{},
 	}
-	for _, opt := range opts {
-		opt(session)
-	}
-	return session
 }
 
 // Start runs in for loop to start telemetry session with exponential backoff
@@ -183,11 +161,8 @@ func (session *telemetrySession) StartTelemetrySession(ctx context.Context) erro
 
 	endpoint, err := session.getTelemetryEndpoint()
 	if err != nil {
-		session.dpeFailureTracker.RecordFailure()
-		session.tcsConnFailureTracker.RecordFailure()
 		return err
 	}
-	session.dpeFailureTracker.RecordSuccess()
 
 	tcsEndpointUrl := formatURL(endpoint, session.cluster, session.containerInstanceArn, session.agentVersion,
 		session.agentHash, containerRuntime, session.containerRuntimeVersion)
@@ -198,7 +173,6 @@ func (session *telemetrySession) StartTelemetrySession(ctx context.Context) erro
 	if session.deregisterInstanceEventStream != nil {
 		err := session.deregisterInstanceEventStream.Subscribe(deregisterContainerInstanceHandler, client.Disconnect)
 		if err != nil {
-			session.tcsConnFailureTracker.RecordFailure()
 			return err
 		}
 		defer session.deregisterInstanceEventStream.Unsubscribe(deregisterContainerInstanceHandler)
@@ -209,7 +183,6 @@ func (session *telemetrySession) StartTelemetrySession(ctx context.Context) erro
 		session.disconnectTimeout,
 		session.disconnectJitterMax)
 	if err != nil {
-		session.tcsConnFailureTracker.RecordFailure()
 		logger.Error("Error connecting to TCS", logger.Fields{
 			field.Error: err,
 		})
@@ -222,7 +195,6 @@ func (session *telemetrySession) StartTelemetrySession(ctx context.Context) erro
 			session.GetLastDisconnectedTime()).Milliseconds()).Done(nil)
 	}
 	defer disconnectTimer.Stop()
-	session.tcsConnFailureTracker.RecordSuccess()
 	logger.Info("Connected to TCS endpoint")
 	// start a timer and listens for tcs heartbeats/acks. The timer is reset when
 	// we receive a heartbeat from the server or when a published metrics message
